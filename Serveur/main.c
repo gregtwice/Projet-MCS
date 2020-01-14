@@ -1,40 +1,75 @@
+
 #include "../Include/streamInc.h"
 #include "../Include/protocols.h"
+#include "../Include/utils.h"
+#include "serveur.h"
 
-#include <time.h>
 
+typedef struct {
+    int sd;
+    struct sockaddr_in clt;
+} dialogueArg_t;
 
-char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen) {
-    switch (sa->sa_family) {
-        case AF_INET:
-            inet_ntop(AF_INET, &(((struct sockaddr_in *) sa)->sin_addr), s, maxlen);
-            break;
+void *dialogue(void *args) {
+    dialogueArg_t *thread_args = args;
+    int sd = thread_args->sd;
+    struct sockaddr_in clt = thread_args->clt;
 
-        case AF_INET6:
-            inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), s, maxlen);
-            break;
+    char *requete;
+    char *reste;
+    do {
+        read(sd, buffer, sizeof(buffer));
+        requete = strtok(buffer, ":");
+        reste = strtok(NULL, ":");
 
-        default:
-            strncpy(s, "Unknown AF", maxlen);
-            return NULL;
-    }
+        switch (atoi(requete)) {
+            case DMD_DECONNEXION : {
+                pthread_t i = pthread_self();
+                client_t client = find_client(i);
+                printf("Au revoir %s\n", client.pseudo);
+                remove_client(i);
+                afficher_annuaire();
+                break;
+            }
+            case CONN_CLIENT_MASTER: {
+                printf("OK : message recu %s\n", buffer);
+                client_t client;
+                time_t rawtime;
+                // on récupère le temps
+                time(&rawtime);
 
-    return s;
+                // on passe en temps local
+                struct tm *timeinfo;
+
+                timeinfo = get_local_time();
+                char *time_string = time_to_char(timeinfo);
+                char *addr = address_to_char(clt.sin_addr);
+                client = creer_client(pthread_self(), reste, rawtime);
+
+                printf("Nouveau Client : [%s] connecté à [%s], d'id :[%lu], ip = [%s]\n",
+                       client.pseudo,
+                       time_string,
+                       client.id,
+                       addr);
+                annuaire_clients.clients[annuaire_clients.nbclients] = client;
+                annuaire_clients.nbclients++;
+                fflush(stdout);
+                write(sd, OK, strlen(OK) + 1);
+            }
+                break;
+
+            default:
+                write(sd, NOK, strlen(NOK) + 1);
+                printf("NOK : message recu %s\n", buffer);
+                break;
+        }
+    } while (atoi(requete) != DMD_DECONNEXION);
+    close(sd);
+    free(thread_args);
+    return NULL;
 }
 
-
-typedef struct client {
-    unsigned int id;
-    char pseudo[20];
-    time_t heureConnexion;
-} client_t;
-
-typedef struct annuaire {
-    client_t clients[10];
-    int nbclients;
-} annuaire_t;
-
-annuaire_t annuaire;
+/*
 
 void dialogueClt(int sd, struct sockaddr_in clt) {
     char *requete;
@@ -49,28 +84,29 @@ void dialogueClt(int sd, struct sockaddr_in clt) {
                 printf("Au revoir\n");
                 break;
             case CONN_CLIENT_MASTER: {
-                write(sd, OK, strlen(OK) + 1);
                 printf("OK : message recu %s\n", buffer);
-                annuaire.nbclients++;
                 client_t client;
                 time_t rawtime;
-                struct tm *timeinfo;
+                // on récupère le temps
                 time(&rawtime);
-                timeinfo = localtime(&rawtime);
-                client.id = annuaire.nbclients;
-                strncpy(client.pseudo, reste, 20);
-                client.heureConnexion = rawtime;
-                char *timeAsString = asctime(timeinfo);
-                timeAsString[strlen(timeAsString) - 1] = '\0'; // suppr le \n de la fin de la fonction
-                char *buf = inet_ntoa(clt.sin_addr);
+
+                // on passe en temps local
+                struct tm *timeinfo;
+
+                timeinfo = get_local_time();
+                char *time_string = time_to_char(timeinfo);
+                char *addr = address_to_char(clt.sin_addr);
+                client = creer_client(getpid(), reste, rawtime);
 
                 printf("Nouveau Client : [%s] connecté à [%s], d'id :[%d], ip = [%s]\n",
                        client.pseudo,
-                       timeAsString,
+                       time_string,
                        client.id,
-                       buf);
-                annuaire.clients[annuaire.nbclients++] = client;
+                       addr);
+                annuaire_clients.clients[annuaire_clients.nbclients] = client;
+                annuaire_clients.nbclients++;
                 fflush(stdout);
+                write(sd, OK, strlen(OK) + 1);
             }
                 break;
 
@@ -80,16 +116,22 @@ void dialogueClt(int sd, struct sockaddr_in clt) {
                 break;
         }
     } while (atoi(requete) != DMD_DECONNEXION);
+    exit(0);
 }
+*/
 
 
 int main() {
-    annuaire.nbclients = 0;
+
+    int nbthreads = 0;
+    annuaire_clients.nbclients = 0;
     int se, sd;
     struct sockaddr_in svc, clt;
     socklen_t cltLen;
 // Création de la socket de réception d’écoute des appels
     CHECK(se = socket(PF_INET, SOCK_STREAM, 0), "Can't create");
+    int optval = 1;
+    setsockopt(se, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 // Préparation de l’adressage du service (d’appel)
     svc.sin_family = PF_INET;
     svc.sin_port = htons(PORT_SVC);
@@ -104,9 +146,16 @@ int main() {
         //  Attente d’un appel
         cltLen = sizeof(clt);
         CHECK(sd = accept(se, (struct sockaddr *) &clt, &cltLen), "Can't connect");
+
+        dialogueArg_t *args = malloc(sizeof *args);
+        args->clt = clt;
+        args->sd = sd;
+
+//        dialogueClt(sd, clt);
+        pthread_t t = ++nbthreads;
         // Dialogue avec le client
-        dialogueClt(sd, clt);
-        close(sd);
+        pthread_create(&t, NULL, dialogue, args);
+        //close(sd);
     }
     printf("Fini !!!");
     close(se);

@@ -7,8 +7,7 @@ add_executable(
         Serveur
         Serveur/main.c
         Include/protocols.h
-
-)
+        Include/utils.c Include/utils.h Serveur/serveur.c Serveur/serveur.h)
 
 add_executable(
         Client
@@ -16,4 +15,4 @@ add_executable(
         Include/protocols.h
         Client/client.c
         Client/client.h
-)
+        Include/utils.c Include/utils.h)
