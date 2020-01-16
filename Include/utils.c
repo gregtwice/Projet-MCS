@@ -25,3 +25,21 @@ struct tm *get_local_time() {
     timeinfo = localtime(&rawtime);
     return timeinfo;
 }
+
+char *protocol_as_char(int protocol, char *prot) {
+    sprintf(prot, "%d:", protocol);
+    return prot;
+}
+
+int parser(char **strArr, char *toParse, char *sep, int nb) {
+
+    int i = 0;
+    char *reste = toParse;
+    char *p = strtok_r(toParse, sep, &reste);
+    while (p != NULL && i < nb) {
+        strArr[i++] = p;
+        p = strtok_r(reste, sep, &reste);
+    }
+
+    return i;
+}

@@ -19,4 +19,8 @@ char *time_to_char(struct tm *localTime);
 
 struct tm *get_local_time();
 
+char * protocol_as_char(int protocol,char * );
+
+int parser(char **strArr, char *toParse, char *sep, int nb);
+
 #endif //PROJET_UTILS_H

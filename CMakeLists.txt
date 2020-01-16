@@ -16,3 +16,10 @@ add_executable(
         Client/client.c
         Client/client.h
         Include/utils.c Include/utils.h)
+
+add_executable(
+        Entrepot
+        Entrepot/main.c
+        Include/protocols.h
+        Include/streamInc.h
+)

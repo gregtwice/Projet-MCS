@@ -31,4 +31,8 @@ void remove_client(unsigned long id);
 
 void afficher_annuaire();
 
+void gererConnexionClient(int sd, struct sockaddr_in *clt, char *reste);
+
+void deconnexionClient();
+
 #endif //PROJET_SERVEUR_H

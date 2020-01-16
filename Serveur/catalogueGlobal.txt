@@ -1,0 +1,16 @@
+1:Fausses Fleurs
+2:Marque-page
+3:Porte Clé
+4:Canapé
+5:Cartes de Visite
+6:Sandales
+7:Aiguilles
+8:Clavier
+9:Craie
+10:Miroir
+11:Meuble
+12:Livre
+13:Table
+14:TV
+15:Chaise
+16:planche

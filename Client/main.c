@@ -2,31 +2,58 @@
 // Created by gdefoy on 11/01/2020.
 //
 
+#include <signal.h>
 #include "client.h"
+#include "../Include/utils.h"
 
+
+enum Etat connexion_serveur_master();
 
 int afficherMenu(enum Etat e);
 
-void quit(int sock);
+enum Etat connexion_serveur_master(int sock) {
+    enum Etat e;
+    printf("Entrez votre pseudonyme (max 20 caractères):\n");
+    char pseudo[20];
+    fgets(pseudo, 20, stdin);
+    sendReq(CONN_CLIENT_MASTER, sock, pseudo);
+    read(sock, buffer, sizeof(buffer));
+    if (strcmp(buffer, "OK") == 0) {
+        puts("Connexion Réussie");
+    } else {
+        puts("Connexion Échouée");
+    }
+    e = CO;
+    return e;
+}
 
-/*void dialogueSrv(int sd, struct sockaddr_in *srv) {
-    char reponse[MAX_BUFF];
-    // Envoi du message MSG au serveur : la réponse sera OK
-    CHECK(write(sd, MSG, strlen(MSG) + 1), "Can't send");
-    CHECK(read(sd, reponse, sizeof(reponse)), "Can't send");
-    // Envoi du message ERR au serveur : la réponse sera NOK
-    CHECK(write(sd, ERR, strlen(ERR) + 1), "Can't send");
-    CHECK(read(sd, reponse, sizeof(reponse)), "Can't send");
-    // Envoi du message BYE au serveur : la réponse sera la fin du dialogue
-    CHECK(write(sd, BYE, strlen(BYE) + 1), "Can't send");
-    CHECK(read(sd, reponse, sizeof(reponse)), "Can't send");
-}*/
+int sock;
 
 
+void quit();
+
+void commander_produit(int sock);
+
+void handler() {
+    puts("Au revoir !");
+    sendReq(DMD_DECONNEXION, sock, "");
+    close(sock);
+    exit(0);
+}
+
+
+void afficher_catalogue(int sock) {
+    char prot[5];
+    protocol_as_char(DMD_CATALOGUE, prot);
+    prot[4] = 32;
+    write(sock, prot, 5);
+    read(sock, buffer, sizeof(buffer));
+    printf("Le catalogue est le suivant: %s", buffer);
+}
 
 
 int main() {
-    int sock;
+    signal(SIGINT, handler);
 
     struct sockaddr_in svc;
     // Création de la socket d’appel et de dialogue
@@ -48,15 +75,11 @@ int main() {
             case NC:
                 switch (choix) {
                     case 1: {
-                        printf("Entrez votre pseudonyme (max 20 caractères):\n");
-                        char pseudo[20];
-                        fgets(pseudo, 20, stdin);
-                        sendReq(CONN_CLIENT_MASTER, sock, pseudo);
-                        e = CO;
+                        e = connexion_serveur_master(sock);
                         break;
                     }
                     case 2:
-                        quit(sock);
+                        quit();
                         return 0;
                     default:
                         printf("Choix incorrect");
@@ -66,12 +89,13 @@ int main() {
             case CO:
                 switch (choix) {
                     case 1:
-
+                        afficher_catalogue(sock);
                         break;
                     case 2:
+                        commander_produit(sock);
                         break;
                     case 3:
-                        quit(sock);
+                        quit();
                         return 0;
                     default:
                         printf("Choix incorrect");
@@ -84,14 +108,36 @@ int main() {
     }
     close(sock);
     return 0;
+}
+
+
+void commander_produit(int sock) {
+    int nproduit, quantite;
+
+    puts("\n\nVeuillez saisir le numéro du produit ainsi que la quantité sous la forme n°-quantité");
+    printf("\tVotre choix :");
+    char input[10];
+    fgets(input, 10, stdin);
+    char *saisie[10];
+    int nb = parser(saisie, input, "-", 2);
+    if (nb == 2) {
+        nproduit = atoi(saisie[0]);
+        quantite = atoi(saisie[1]);
+        printf("\tVous avez demandé %d en quantité %d\n", nproduit, quantite);
+        char prot[20];
+        protocol_as_char(DMD_PROD_SERV_MASTER, prot);
+        sprintf(prot, "%s%s-%s", prot, saisie[0], saisie[1]);
+        printf("le message total :%s\n",prot);
+        write(sock, prot, strlen(prot) + 1);
+        read(sock,buffer, sizeof(buffer));
+
+
+    } else {
+        fprintf(stderr, "\tErreur de saisie\n\n\n");
+    }
 
 }
 
-void quit(int sock) {
-    puts("Au revoir !");
-    sendReq(DMD_DECONNEXION, sock, "");
-    close(sock);
-}
 
 int afficherMenu(enum Etat e) {
     switch (e) {
@@ -112,4 +158,11 @@ int afficherMenu(enum Etat e) {
     scanf("%d", &choix); //NOLINT
     getchar();
     return choix;
+}
+
+
+void quit() {
+    puts("Au revoir !");
+    sendReq(DMD_DECONNEXION, sock, "");
+    close(sock);
 }
