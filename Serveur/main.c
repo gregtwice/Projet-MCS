@@ -1,4 +1,5 @@
 
+#include <signal.h>
 #include "../Include/streamInc.h"
 #include "../Include/protocols.h"
 #include "serveur.h"
@@ -9,6 +10,20 @@ typedef struct {
     struct sockaddr_in clt;
 } dialogueArg_t;
 
+typedef struct {
+    client_t client;
+    int numprod;
+    int qte;
+    int ack;
+} commande_t;
+
+typedef struct {
+    commande_t commandes[10];
+    int nbCommandes;
+} carnet_t;
+carnet_t carnet;
+
+pthread_mutex_t mutex;
 
 dialogueArg_t *creerArgsThread(int sd, struct sockaddr_in *clt);
 
@@ -34,11 +49,41 @@ void *dialogue(void *args) {
                 char response[4];
                 protocol_as_char(SUCC_CONN, response);
                 strcat(response, ":");
+                serveur_t serveur;
+                serveur.sd = sd;
+                serveur.id = pthread_self();
+                liste_serveurs.serveurs[liste_serveurs.nbServeurs++] = serveur;
                 write(sd, response, 4);
             }
                 break;
             case DMD_PROD_SERV_MASTER: {
-
+                char *split[2];
+                printf("Reste : %s", reste);
+                parser(split, reste, "-", 2);
+                for (int j = 0; j < 2; ++j) {
+                    printf("%s", split[j]);
+                }
+                int nbProduit = atoi(split[0]);
+                int quantite = atoi(split[1]);
+                printf("%d\n", nbProduit);
+                commande_t commande;
+                commande.client = find_client(pthread_self());
+                commande.qte = quantite;
+                commande.numprod = nbProduit;
+                commande.ack = 0;
+                carnet.commandes[carnet.nbCommandes] = commande;
+                carnet.nbCommandes++;
+                for (int i = 0; i < liste_serveurs.nbServeurs; ++i) {
+                    printf("Serveur %d\n", i);
+                    int sde = liste_serveurs.serveurs[i].sd;
+                    char request[50];
+                    char prot[4];
+                    protocol_as_char(DMD_PROD_ENTREPOT, prot);
+                    sprintf(request, "%s%d:%d:%lu", prot, nbProduit, quantite, pthread_self());
+                    printf("%s", request);
+                    write(sde, request, strlen(request));
+                }
+                break;
             }
 
             case DMD_CATALOGUE: {
@@ -59,6 +104,31 @@ void *dialogue(void *args) {
                 break;
             }
 
+            case PROD_DISPO_QTE: {
+
+                pthread_mutex_lock(&mutex);
+                printf("MUTEX PRISE !!!\n");
+                printf("%s\n", reste);
+                char *ptr;
+                for (int i = 0; i < carnet.nbCommandes; ++i) {
+                    commande_t curCommmande = carnet.commandes[i];
+                    if (curCommmande.client.id == strtoul(reste, &ptr, 10)) {
+                        if (curCommmande.ack == 0) {
+                            char prot[4];
+                            printf("Commande pour %s\n", curCommmande.client.pseudo);
+                            protocol_as_char(CMD_PROD_ENTREPOT, prot);
+                            char request[100];
+                            curCommmande.ack = 1;
+                            sprintf(request, "%s%d%d", prot, curCommmande.numprod, curCommmande.qte);
+                            write(sd, request, strlen(request));
+                        }
+                    }
+                }
+                pthread_mutex_unlock(&mutex);
+                printf("MUTEX RELACHÉE !!!\n");
+                break;
+            }
+
             default:
                 write(sd, NOK, strlen(NOK) + 1);
                 printf("NOK : message recu %s\n", buffer);
@@ -70,15 +140,24 @@ void *dialogue(void *args) {
     return NULL;
 }
 
+void printstate() {
+    afficher_annuaire();
+    for (int i = 0; i < liste_serveurs.nbServeurs; ++i) {
+        printf("%d", liste_serveurs.serveurs[i].sd);
+    }
+}
+
 
 int main() {
-
     int nbthreads = 0;
+    carnet.nbCommandes = 0;
     annuaire_clients.nbclients = 0;
+    liste_serveurs.nbServeurs = 0;
     int se, sd;
     struct sockaddr_in svc, clt;
     socklen_t cltLen;
-
+    signal(SIGUSR1, printstate);
+    pthread_mutex_init(&mutex, NULL);
     // Création de la socket de réception d’écoute des appels
     CHECK(se = socket(PF_INET, SOCK_STREAM, 0), "Can't create");
     int optval = 1;

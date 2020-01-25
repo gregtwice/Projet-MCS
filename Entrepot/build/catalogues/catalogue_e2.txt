@@ -1,0 +1,6 @@
+1:Meuble:0
+2:Livre:2
+3:Table:4
+4:TV:6
+5:Chaise:0
+6:Planche:2

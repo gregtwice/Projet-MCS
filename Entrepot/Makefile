@@ -1,5 +1,5 @@
 all:
-	gcc main.c -o build/entrepot.exe -Wall
+	gcc -g main.c ../Include/utils.o -o build/entrepot.exe -Wall
 
 clean:
 	rm *.exe

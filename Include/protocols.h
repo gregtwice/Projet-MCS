@@ -17,6 +17,8 @@
 #define DMD_PROD_SERV_MASTER 111
 #define CMD_PROD_SERV_MASTER 112
 
+#define DMD_PROD_ENTREPOT 120
+#define CMD_PROD_ENTREPOT 121
 // Codes de succès
 
 #define SUCC_CONN 200

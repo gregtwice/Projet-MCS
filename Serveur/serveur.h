@@ -21,7 +21,21 @@ typedef struct annuaire {
     int nbclients;
 } annuaire_t;
 
+
+typedef struct serveur {
+    int sd;
+    char addresse[30];
+    unsigned long id;
+} serveur_t;
+
+typedef struct {
+    serveur_t serveurs[10];
+    int nbServeurs;
+} serveurList_t;
+
+
 annuaire_t annuaire_clients;
+serveurList_t liste_serveurs;
 
 client_t creer_client(unsigned long id, char *pseudo, time_t heure_conn);
 

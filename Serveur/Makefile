@@ -1,5 +1,5 @@
 all : serveur.o utils.o
-	gcc serveur.o utils.o main.c -o build/serveur.exe -lpthread
+	gcc -g serveur.o utils.o main.c -o build/serveur.exe -lpthread
 
 serveur.o : serveur.c serveur.h
 	gcc -c serveur.c
