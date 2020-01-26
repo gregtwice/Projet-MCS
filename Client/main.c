@@ -15,7 +15,8 @@ enum Etat connexion_serveur_master(int sock) {
     enum Etat e;
     printf("Entrez votre pseudonyme (max 20 caractères):\n");
     char pseudo[20];
-    fgets(pseudo, 20, stdin);
+//    fgets(pseudo, 20, stdin);
+    strcpy(pseudo, "Grégoire\n");
     sendReq(CONN_CLIENT_MASTER, sock, pseudo);
     read(sock, buffer, sizeof(buffer));
     if (strcmp(buffer, "OK") == 0) {
@@ -73,6 +74,7 @@ int main() {
         int choix = afficherMenu(e);
         switch (e) {
             case NC:
+                choix = 1;
                 switch (choix) {
                     case 1: {
                         e = connexion_serveur_master(sock);
@@ -87,6 +89,7 @@ int main() {
                 }
                 break;
             case CO:
+                choix = 2;
                 switch (choix) {
                     case 1:
                         afficher_catalogue(sock);
@@ -117,7 +120,8 @@ void commander_produit(int sock) {
     puts("\n\nVeuillez saisir le numéro du produit ainsi que la quantité sous la forme n°-quantité");
     printf("\tVotre choix :");
     char input[10];
-    fgets(input, 10, stdin);
+//    fgets(input, 10, stdin);
+    strcpy(input, "2-3");
     char *saisie[10];
     int nb = parser(saisie, input, "-", 2);
     if (nb == 2) {
@@ -127,9 +131,9 @@ void commander_produit(int sock) {
         char prot[20];
         protocol_as_char(DMD_PROD_SERV_MASTER, prot);
         sprintf(prot, "%s%s-%s", prot, saisie[0], saisie[1]);
-        printf("le message total :%s\n",prot);
+        printf("le message total :%s\n", prot);
         write(sock, prot, strlen(prot) + 1);
-        read(sock,buffer, sizeof(buffer));
+        read(sock, buffer, sizeof(buffer));
 
 
     } else {
@@ -154,9 +158,9 @@ int afficherMenu(enum Etat e) {
             break;
     }
     printf("Votre choix ?");
-    int choix;
-    scanf("%d", &choix); //NOLINT
-    getchar();
+    int choix =0;
+//    scanf("%d", &choix); //NOLINT
+//    getchar();
     return choix;
 }
 

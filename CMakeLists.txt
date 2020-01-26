@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 project(Projet_MCS C)
-
+find_package(Threads)
 set(CMAKE_C_STANDARD 11)
 
 add_executable(
@@ -16,10 +16,13 @@ add_executable(
         Client/client.c
         Client/client.h
         Include/utils.c Include/utils.h)
+target_link_libraries(Serveur ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(
         Entrepot
         Entrepot/main.c
         Include/protocols.h
         Include/streamInc.h
+        Include/utils.h
+        Include/utils.c
 )

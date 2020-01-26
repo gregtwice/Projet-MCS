@@ -35,8 +35,9 @@ void *dialogue(void *args) {
     char *reste;
     do {
         read(sd, buffer, sizeof(buffer));
-        requete = strtok(buffer, ":");
-        reste = strtok(NULL, ":");
+        char *savptr = buffer;
+        requete = strtok_r(buffer, ":", &savptr);
+        reste = strtok_r(NULL, ":", &savptr);
         printf("Requête Reçue ! %s\n", buffer);
         switch (atoi(requete)) {
             case DMD_DECONNEXION :
@@ -85,6 +86,7 @@ void *dialogue(void *args) {
                 }
                 break;
             }
+                break;
 
             case DMD_CATALOGUE: {
                 puts("Demande Catalogue !!");
@@ -103,9 +105,9 @@ void *dialogue(void *args) {
                 }
                 break;
             }
+                break;
 
             case PROD_DISPO_QTE: {
-
                 pthread_mutex_lock(&mutex);
                 printf("MUTEX PRISE !!!\n");
                 printf("%s\n", reste);
@@ -119,7 +121,8 @@ void *dialogue(void *args) {
                             protocol_as_char(CMD_PROD_ENTREPOT, prot);
                             char request[100];
                             curCommmande.ack = 1;
-                            sprintf(request, "%s%d%d", prot, curCommmande.numprod, curCommmande.qte);
+                            sprintf(request, "%s%d:%d", prot, curCommmande.numprod, curCommmande.qte);
+                            printf("%s", request);
                             write(sd, request, strlen(request));
                         }
                     }
@@ -143,7 +146,7 @@ void *dialogue(void *args) {
 void printstate() {
     afficher_annuaire();
     for (int i = 0; i < liste_serveurs.nbServeurs; ++i) {
-        printf("%d", liste_serveurs.serveurs[i].sd);
+        printf("%d,%d\n", i, liste_serveurs.serveurs[i].sd);
     }
 }
 

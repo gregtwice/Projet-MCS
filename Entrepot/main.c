@@ -34,7 +34,7 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
         sscanf(buffer, "%s:%s:%s", requete, cdProduit, qte);
         char *req = strtok(buffer, ":");
         char *reste = strtok(NULL, ":");
-        switch (atoi(requete)) {
+        switch (atoi(req)) {
             case DMD_DECONNEXION :
                 printf("Au revoir\n");
                 break;
@@ -58,14 +58,12 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                             protocol_as_char(PROD_DISPO_QTE, prot);
                             sprintf(response, "%s%s", prot, split[3]);
                             write(sd, response, strlen(response));
-                            writeCatalogue();
                         } else {
                             char response[10];
                             printf("QUANTITÉ OK !!!!");
                             protocol_as_char(PROD_DISPO_NON_QTE, response);
                             write(sd, response, strlen(response));
                         }
-                        break;
                     }
                 }
                 if (!flagFound) {
@@ -78,6 +76,8 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                 break;
             }
             case CMD_PROD_ENTREPOT : {
+                printf("BUFFER :%s\n",buffer);
+                printf("RESTE :%s\n",reste);
                 char *split[3];
                 parser(split, reste, ":", 2);
                 int prod = atoi(split[0]);
@@ -85,6 +85,7 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                 for (int i = 0; i < catalogue.nprods; ++i) {
                     if (catalogue.produits[i].nProd == prod) {
                         catalogue.produits[i].qte -= qte;
+                        writeCatalogue();
                     }
                 }
                 break;
@@ -148,7 +149,7 @@ int sock;
 int eNumber;
 
 void writeCatalogue() {
-    char *filename = NULL;
+    char filename [50];
     sprintf(filename, "./catalogues/catalogue_e%d.txt", eNumber);
         printf("écriture du ficher\n");
     FILE *f = fopen(filename, "w");
@@ -157,7 +158,7 @@ void writeCatalogue() {
     }
     for (int i = 0; i < catalogue.nprods; ++i) {
         produit_t x = catalogue.produits[i];
-        fprintf(f, "%d:%s:%d", x.nProd, x.nom, x.qte);
+        fprintf(f, "%d:%s:%d\n", x.nProd, x.nom, x.qte);
     }
     fclose(f);
 }
