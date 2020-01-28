@@ -2,6 +2,11 @@
 // Created by gdefoy on 11/01/2020.
 //
 
+/**
+ * \file Client/main.c
+ * \brief gerer le client
+ */
+
 #include <signal.h>
 #include "client.h"
 #include "../Include/utils.h"
@@ -10,7 +15,11 @@
 enum Etat connexion_serveur_master();
 
 int afficherMenu(enum Etat e);
-
+/**
+ * \fn enum Etat connexion_serveur_master(int sock)
+ * \param sock
+ * \return etat de connection
+ */
 enum Etat connexion_serveur_master(int sock) {
     enum Etat e;
     printf("Entrez votre pseudonyme (max 20 caractères):\n");
@@ -34,7 +43,10 @@ int sock;
 void quit();
 
 void commander_produit(int sock);
-
+/**
+ * \fn void handler()
+ * \brief permet de ce deconnecter
+ */
 void handler() {
     puts("Au revoir !");
     sendReq(DMD_DECONNEXION, sock, "");
@@ -42,7 +54,11 @@ void handler() {
     exit(0);
 }
 
-
+/**
+ * \fn void afficher_catalogue(int sock)
+ * \brief permet d'afficher le catalogue du serveur maitre
+ * \param sock
+ */
 void afficher_catalogue(int sock) {
     char prot[5];
     protocol_as_char(DMD_CATALOGUE, prot);
@@ -111,7 +127,11 @@ int main() {
     return 0;
 }
 
-
+/**
+ * \fn void commander_produit(int sock)
+ * \param sock
+ * \brief permet de commander un produit au pres du serveur maitre
+ */
 void commander_produit(int sock) {
     int nproduit, quantite;
 
@@ -138,7 +158,12 @@ void commander_produit(int sock) {
 
 }
 
-
+/**
+ * \fn int afficherMenu(enum Etat e)
+ * \brief permet au client de choisir ce qu'il veut faire
+ * \param etat connecter ou non connecter
+ * \return le choix du client
+ */
 int afficherMenu(enum Etat e) {
     switch (e) {
         case NC:
@@ -160,7 +185,10 @@ int afficherMenu(enum Etat e) {
     return choix;
 }
 
-
+/**
+ * \fn void quit()
+ * \brief permet au client de quitter la connection avec le seveur maitre
+ */
 void quit() {
     puts("Au revoir !");
     sendReq(DMD_DECONNEXION, sock, "");

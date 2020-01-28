@@ -1,6 +1,10 @@
 //
 // Created by gdefoy on 12/01/2020.
 //
+/**
+ * \file Client/client.h
+ */
+
 
 #ifndef PROJET_CLIENT_H
 #define PROJET_CLIENT_H
@@ -8,7 +12,9 @@
 #include "../Include/protocols.h"
 #include "../Include/streamInc.h"
 
-
+/**
+ * \enum Decrit les etat du client, connecter ou non
+ */
 enum Etat {
     NC, // Non Connecté
     CO, // Connnecté
@@ -17,7 +23,7 @@ enum Etat {
 
 /**
  * Envoie une requête au serveur
- * @param code le code de la requete @see protocols.h
+ * @param code le  code de la requete @see protocols.h
  * @param sock la socket
  * @param msg le message à envoyer au serveur
  */

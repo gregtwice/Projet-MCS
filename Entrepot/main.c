@@ -2,6 +2,11 @@
 // Created by pierre on 14/01/2020.
 //
 
+/**
+ * \file Entrepot/main.c
+ * \brief gerer les entrepot
+ */
+
 #include <signal.h>
 #include   "../Include/streamInc.h"
 #include "../Include/protocols.h"
@@ -12,13 +17,19 @@ char cdProduit[MAX_BUFF];
 char qte[MAX_BUFF];
 
 void writeCatalogue();
-
+/**
+ * \struct produit_t
+ * \brief descriptif d'un produit contenue dans l'entrepot
+ */
 typedef struct {
     char nom[20];
     int nProd;
     int qte;
 } produit_t;
-
+/**
+ * \struct catalogue_t
+ * \brief permet de lister tous les prouit et leur quantite
+ */
 typedef struct {
     produit_t produits[30];
     int nprods;
@@ -26,7 +37,12 @@ typedef struct {
 
 catalogue_t catalogue;
 
-
+/**
+ * \fn void dialogueSvc(int sd, struct sockaddr_in svc)
+ * \param sd
+ * \param svc
+ * \brief permet de gerer la relation avec le serveur maitre
+ */
 void dialogueSvc(int sd, struct sockaddr_in svc) {
 
     do {
@@ -116,7 +132,10 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
     } while (atoi(requete) != 102);
 }
 
-
+/**
+ * recupere les infos des produit des entrepots
+ * @param no nomeros du produit desirer
+ */
 void getinfos(int no) {
     printf("Ici !!\n");
     FILE *file;
@@ -181,7 +200,9 @@ void writeCatalogue() {
     fclose(f);
 }
 
-
+/**
+ * permet à l'entrepot de ce deconnecter du serveur maitre
+ */
 void quit() {
     write(sock, "102:", 5);
     close(sock);

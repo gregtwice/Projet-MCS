@@ -1,3 +1,7 @@
+/**
+ * \file Serveur/main.c
+ * \brief gerer le serveur maitre
+ */
 
 #include <signal.h>
 #include <semaphore.h>
@@ -5,12 +9,18 @@
 #include "../Include/protocols.h"
 #include "serveur.h"
 
-
+/**
+ * \struct dialogueArg_t
+ */
 typedef struct {
     int sd;
     struct sockaddr_in clt;
 } dialogueArg_t;
 
+/**
+ * \struct commande_t
+ * \brief decris une commande
+ */
 typedef struct {
     client_t client;
     int numprod;
@@ -18,6 +28,10 @@ typedef struct {
     int ack;
 } commande_t;
 
+/**
+ * \struct carnet_t
+ * \brief carnet de comande qui permet de suivre les commandes
+ */
 typedef struct {
     commande_t commandes[100];
     int nbCommandes;
@@ -28,7 +42,12 @@ pthread_mutex_t mutex;
 sem_t semCommande;
 
 dialogueArg_t *creerArgsThread(int sd, struct sockaddr_in *clt);
-
+/**
+ * \fn void *dialogue(void *args)
+ * \brief dialogue du serveur
+ * \param socket et adresse du client ou de l'entrepot
+ *
+ */
 void *dialogue(void *args) {
     dialogueArg_t *thread_args = args;
     int sd = thread_args->sd;
@@ -172,7 +191,10 @@ void *dialogue(void *args) {
     free(thread_args);
     return NULL;
 }
-
+/**
+ * \fn void printstate()
+ *  \brief permet d'afficherl'etat des serveurs
+ */
 void printstate() {
     afficher_annuaire();
     for (int i = 0; i < liste_serveurs.nbServeurs; ++i) {
