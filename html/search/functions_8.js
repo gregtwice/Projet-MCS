@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['time_5fto_5fchar',['time_to_char',['../utils_8h.html#a3d92121f53d90afd78cabebccaabf20b',1,'utils.c']]]
+  ['remove_5fclient',['remove_client',['../serveur_8h.html#af097b1513c95866e40ad49a407725311',1,'serveur.c']]]
 ];

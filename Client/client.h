@@ -13,7 +13,7 @@
 #include "../Include/streamInc.h"
 
 /**
- * \enum Decrit les etat du client, connecter ou non
+ * \enum Décrit les état du client, connecté ou non
  */
 enum Etat {
     NC, // Non Connecté

@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['main_2ec',['main.c',['../_client_2main_8c.html',1,'(Global Namespace)'],['../_entrepot_2main_8c.html',1,'(Global Namespace)'],['../_serveur_2main_8c.html',1,'(Global Namespace)']]]
+  ['handler',['handler',['../_client_2main_8c.html#a2f62e12057ef5971465770f7effbebdd',1,'main.c']]]
 ];

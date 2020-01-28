@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['getinfos',['getinfos',['../_entrepot_2main_8c.html#a5556adf6ffc5ec08ca53dd8314447185',1,'main.c']]]
+  ['find_5fclient',['find_client',['../serveur_8h.html#ae4aa03d1fd68025568d3ad9e93e93dbf',1,'serveur.c']]]
 ];

@@ -13,7 +13,11 @@
 
 
 enum Etat connexion_serveur_master();
-
+/**
+ * @fn afficherMenu(enum Etat e)
+ * @param e l'etat du client
+ * @return le choix de l'utilisateur
+ */
 int afficherMenu(enum Etat e);
 /**
  * \fn enum Etat connexion_serveur_master(int sock)
@@ -39,9 +43,15 @@ enum Etat connexion_serveur_master(int sock) {
 
 int sock;
 
-
+/**
+ * @fn void quit()
+ * @brief Permet de quitter le serveur
+ */
 void quit();
-
+/**
+ * void commander_produit(int sock)
+ * @param sock
+ */
 void commander_produit(int sock);
 /**
  * \fn void handler()

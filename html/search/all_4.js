@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['handler',['handler',['../_client_2main_8c.html#a2f62e12057ef5971465770f7effbebdd',1,'main.c']]]
+  ['gererconnexionclient',['gererConnexionClient',['../serveur_8h.html#a77aa60ff73c177475074926cada1c159',1,'serveur.c']]],
+  ['getinfos',['getinfos',['../_entrepot_2main_8c.html#a5556adf6ffc5ec08ca53dd8314447185',1,'main.c']]]
 ];

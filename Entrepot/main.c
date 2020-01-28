@@ -19,7 +19,7 @@ char qte[MAX_BUFF];
 void writeCatalogue();
 /**
  * \struct produit_t
- * \brief descriptif d'un produit contenue dans l'entrepot
+ * \brief descriptif d'un produit contenu dans l'entrepot
  */
 typedef struct {
     char nom[20];
@@ -28,7 +28,7 @@ typedef struct {
 } produit_t;
 /**
  * \struct catalogue_t
- * \brief permet de lister tous les prouit et leur quantite
+ * \brief permet de lister tous les produits et leur quantité
  */
 typedef struct {
     produit_t produits[30];
@@ -39,8 +39,8 @@ catalogue_t catalogue;
 
 /**
  * \fn void dialogueSvc(int sd, struct sockaddr_in svc)
- * \param sd
- * \param svc
+ * \param sd la socket de dialogue
+ * \param svc l'addresse du client
  * \brief permet de gerer la relation avec le serveur maitre
  */
 void dialogueSvc(int sd, struct sockaddr_in svc) {
@@ -133,8 +133,8 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
 }
 
 /**
- * recupere les infos des produit des entrepots
- * @param no nomeros du produit desirer
+ * @brief Recupère les infos de l'entrepot correspondant au numéro
+ * @param no le numéro de l'entrepot
  */
 void getinfos(int no) {
     printf("Ici !!\n");
@@ -185,6 +185,9 @@ void getinfos(int no) {
 int sock;
 int eNumber;
 
+/**
+ * \brief écrit le catalogue dans un fichier
+ */
 void writeCatalogue() {
     char filename[50];
     sprintf(filename, "./catalogues/catalogue_e%d.txt", eNumber);
@@ -201,7 +204,7 @@ void writeCatalogue() {
 }
 
 /**
- * permet à l'entrepot de ce deconnecter du serveur maitre
+ * @brief permet à l'entrepot de se déconnecter du serveur maitre
  */
 void quit() {
     write(sock, "102:", 5);
