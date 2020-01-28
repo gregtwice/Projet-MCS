@@ -31,22 +31,28 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
 
     do {
         read(sd, buffer, sizeof(buffer));
-        sscanf(buffer, "%s:%s:%s", requete, cdProduit, qte);
-        char *req = strtok(buffer, ":");
-        char *reste = strtok(NULL, ":");
+        printf("\n\n\n\nJE REÇOIS ÇA : %s\n", buffer);
+        char *svptr = buffer;
+//        sscanf(buffer, "%s:%s:%s", requete, cdProduit, qte);
+        char *req = strtok_r(buffer, ":", &svptr);
+        printf("SavePointer :%s\n", svptr);
+        char *reste = strtok_r(NULL, ":", &svptr);
+        printf("BUFFER :%s\n", buffer);
+        printf("RESTE :%s\n", reste);
+
         switch (atoi(req)) {
             case DMD_DECONNEXION :
                 printf("Au revoir\n");
                 break;
             case DMD_PROD_ENTREPOT : {
                 //demande produit entrepot
-                char *split[4];
-                parser(split, requete, ":", 4);
-                for (int i = 0; i < 4; ++i) {
-                    printf("%s\n", split[i]);
+                char *split[3];
+                parser(split, svptr, ":", 3);
+                for (int i = 0; i < 3; ++i) {
+//                    printf("%s\n", split[i]);
                 }
-                int prod = atoi(split[1]);
-                int qte = atoi(split[2]);
+                int prod = atoi(reste);
+                int qte = atoi(split[0]);
                 int flagFound = 0;
                 for (int j = 0; j < catalogue.nprods; ++j) {
                     if (catalogue.produits[j].nProd == prod) {
@@ -56,7 +62,7 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                             char prot[4];
                             printf("QUANTITÉ OK !!!!\n");
                             protocol_as_char(PROD_DISPO_QTE, prot);
-                            sprintf(response, "%s%s", prot, split[3]);
+                            sprintf(response, "%s%s", prot, split[1]);
                             write(sd, response, strlen(response));
                         } else {
                             char response[10];
@@ -76,16 +82,28 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                 break;
             }
             case CMD_PROD_ENTREPOT : {
-                printf("BUFFER :%s\n",buffer);
-                printf("RESTE :%s\n",reste);
+                printf("BUFFER :%s\n", buffer);
+                printf("RESTE :%s\n", reste);
                 char *split[3];
-                parser(split, reste, ":", 2);
-                int prod = atoi(split[0]);
-                int qte = atoi(split[1]);
+                parser(split, svptr, ":", 3);
+                for (int k = 0; k < 3; ++k) {
+                    printf("split[%d] = %s\n", k, split[k]);
+                }
+                int prod = atoi(reste);
+                int quantite = atoi(split[0]);
+                printf("Prod : %d Quantité :%d", prod, quantite);
                 for (int i = 0; i < catalogue.nprods; ++i) {
                     if (catalogue.produits[i].nProd == prod) {
-                        catalogue.produits[i].qte -= qte;
-                        writeCatalogue();
+                        catalogue.produits[i].qte -= quantite;
+//                        writeCatalogue();
+                        for (int j = 0; j < catalogue.nprods; ++j) {
+                            produit_t x = catalogue.produits[j];
+                            printf("numprd :%d nomprod : %s quantité : %d\n", x.nProd, x.nom, x.qte);
+                        }
+                        char *endptr;
+                        printf("id commande :  %s\n", split[1]);
+                        sprintf(buffer, "212:%lu", strtoul(split[1], &endptr, 10));
+                        write(sd, buffer, strlen(buffer));
                     }
                 }
                 break;
@@ -136,7 +154,7 @@ void getinfos(int no) {
             i = 0;
         }
     }
-    printf("%d\n", n);
+    printf("nb produits %d\n", n);
 
     for (int j = 0; j < n; ++j) {
         produit_t x = catalogue.produits[j];
@@ -149,9 +167,9 @@ int sock;
 int eNumber;
 
 void writeCatalogue() {
-    char filename [50];
+    char filename[50];
     sprintf(filename, "./catalogues/catalogue_e%d.txt", eNumber);
-        printf("écriture du ficher\n");
+    printf("écriture du ficher\n");
     FILE *f = fopen(filename, "w");
     if (f == NULL) {
         return;
@@ -177,8 +195,6 @@ int main(int argc, char **argv) {
         fprintf(stderr, "Pas assez d'arguments");
         return 1;
     }
-
-
 
 
     signal(SIGINT, quit);

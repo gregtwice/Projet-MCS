@@ -74,7 +74,6 @@ int main() {
         int choix = afficherMenu(e);
         switch (e) {
             case NC:
-                choix = 1;
                 switch (choix) {
                     case 1: {
                         e = connexion_serveur_master(sock);
@@ -89,7 +88,6 @@ int main() {
                 }
                 break;
             case CO:
-                choix = 2;
                 switch (choix) {
                     case 1:
                         afficher_catalogue(sock);
@@ -120,8 +118,7 @@ void commander_produit(int sock) {
     puts("\n\nVeuillez saisir le numéro du produit ainsi que la quantité sous la forme n°-quantité");
     printf("\tVotre choix :");
     char input[10];
-//    fgets(input, 10, stdin);
-    strcpy(input, "2-3");
+    fgets(input, 10, stdin);
     char *saisie[10];
     int nb = parser(saisie, input, "-", 2);
     if (nb == 2) {
@@ -134,8 +131,7 @@ void commander_produit(int sock) {
         printf("le message total :%s\n", prot);
         write(sock, prot, strlen(prot) + 1);
         read(sock, buffer, sizeof(buffer));
-
-
+        printf("\n\nRéponse %s !!!!!\n\n",buffer);
     } else {
         fprintf(stderr, "\tErreur de saisie\n\n\n");
     }
@@ -159,8 +155,8 @@ int afficherMenu(enum Etat e) {
     }
     printf("Votre choix ?");
     int choix =0;
-//    scanf("%d", &choix); //NOLINT
-//    getchar();
+    scanf("%d", &choix); //NOLINT
+    getchar();
     return choix;
 }
 

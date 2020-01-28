@@ -7,9 +7,10 @@
 #include "serveur.h"
 
 
-client_t creer_client(unsigned long id, char *pseudo, time_t heure_conn) {
+client_t creer_client(unsigned long id, char *pseudo, time_t heure_conn, int sd) {
     client_t result;
     result.id = id;
+    result.sd = sd;
     strncpy(result.pseudo, pseudo, MAX_PSEUDO_CLIENT);
     result.heureConnexion = heure_conn;
     return result;
@@ -58,7 +59,7 @@ void gererConnexionClient(int sd, struct sockaddr_in *clt, char *reste) {
     timeinfo = get_local_time();
     char *time_string = time_to_char(timeinfo);
     char *addr = address_to_char((*clt).sin_addr);
-    client = creer_client(pthread_self(), reste, rawtime);
+    client = creer_client(pthread_self(), reste, rawtime, sd);
 
     printf("Nouveau Client : [%s] connecté à [%s], d'id :[%lu], ip = [%s]\n",
            client.pseudo,

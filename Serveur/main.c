@@ -1,5 +1,6 @@
 
 #include <signal.h>
+#include <semaphore.h>
 #include "../Include/streamInc.h"
 #include "../Include/protocols.h"
 #include "serveur.h"
@@ -18,12 +19,13 @@ typedef struct {
 } commande_t;
 
 typedef struct {
-    commande_t commandes[10];
+    commande_t commandes[100];
     int nbCommandes;
 } carnet_t;
 carnet_t carnet;
 
 pthread_mutex_t mutex;
+sem_t semCommande;
 
 dialogueArg_t *creerArgsThread(int sd, struct sockaddr_in *clt);
 
@@ -32,13 +34,17 @@ void *dialogue(void *args) {
     int sd = thread_args->sd;
     struct sockaddr_in clt = thread_args->clt;
     char *requete;
-    char *reste;
     do {
-        read(sd, buffer, sizeof(buffer));
-        char *savptr = buffer;
-        requete = strtok_r(buffer, ":", &savptr);
+        requete = NULL;
+        char *reste;
+        char buf[MAX_BUFF];
+        read(sd, buf, sizeof(buf));
+        char *savptr = buf;
+        requete = strtok_r(buf, ":", &savptr);
         reste = strtok_r(NULL, ":", &savptr);
-        printf("Requête Reçue ! %s\n", buffer);
+        printf("Requête Reçue ! %s\n", buf);
+        printf("RESTE :%s\n", reste);
+
         switch (atoi(requete)) {
             case DMD_DECONNEXION :
                 deconnexionClient();
@@ -62,11 +68,11 @@ void *dialogue(void *args) {
                 printf("Reste : %s", reste);
                 parser(split, reste, "-", 2);
                 for (int j = 0; j < 2; ++j) {
-                    printf("%s", split[j]);
+                    printf("split[%d] = %s", j, split[j]);
                 }
                 int nbProduit = atoi(split[0]);
                 int quantite = atoi(split[1]);
-                printf("%d\n", nbProduit);
+                printf("nb Produit :%d\n", nbProduit);
                 commande_t commande;
                 commande.client = find_client(pthread_self());
                 commande.qte = quantite;
@@ -81,7 +87,7 @@ void *dialogue(void *args) {
                     char prot[4];
                     protocol_as_char(DMD_PROD_ENTREPOT, prot);
                     sprintf(request, "%s%d:%d:%lu", prot, nbProduit, quantite, pthread_self());
-                    printf("%s", request);
+                    printf("Chaine envoyée entrepot :%s", request);
                     write(sde, request, strlen(request));
                 }
                 break;
@@ -95,22 +101,21 @@ void *dialogue(void *args) {
                 int i = 0;
                 if (fic) {
                     while ((c = getc(fic)) != EOF) {
-                        buffer[i] = c;
+                        buf[i] = c;
                         i++;
                     }
-                    buffer[++i] = '\0';
-                    write(sd, buffer, i + 1);
+                    buf[++i] = '\0';
+                    write(sd, buf, i + 1);
                 } else {
                     puts("Erreur Lecture Fichier !!!");
                 }
                 break;
             }
-                break;
 
             case PROD_DISPO_QTE: {
-                pthread_mutex_lock(&mutex);
+                sem_wait(&semCommande);
                 printf("MUTEX PRISE !!!\n");
-                printf("%s\n", reste);
+                printf("Reste :%s\n", reste);
                 char *ptr;
                 for (int i = 0; i < carnet.nbCommandes; ++i) {
                     commande_t curCommmande = carnet.commandes[i];
@@ -120,24 +125,49 @@ void *dialogue(void *args) {
                             printf("Commande pour %s\n", curCommmande.client.pseudo);
                             protocol_as_char(CMD_PROD_ENTREPOT, prot);
                             char request[100];
-                            curCommmande.ack = 1;
-                            sprintf(request, "%s%d:%d", prot, curCommmande.numprod, curCommmande.qte);
-                            printf("%s", request);
+                            carnet.commandes[i].ack = 1;
+                            sprintf(request, "%s%d:%d:%lu", prot, curCommmande.numprod, curCommmande.qte,
+                                    curCommmande.client.id);
+                            printf("Requete vers entrepot %s\n", request);
+                            printf("longueur req :%lu\n", strlen(request));
                             write(sd, request, strlen(request));
                         }
                     }
                 }
-                pthread_mutex_unlock(&mutex);
+                sem_post(&semCommande);
                 printf("MUTEX RELACHÉE !!!\n");
+                break;
+            }
+
+            case PROD_DISPO_NON_QTE: {
+                break;
+            }
+
+            case SUCC_CMD_ENTREPOT: {
+                char *ptr;
+                unsigned long id = strtoul(reste, &ptr, 10);
+                int place = 0;
+                for (int i = 0; i < carnet.nbCommandes; ++i) {
+                    client_t client = carnet.commandes[i].client;
+                    if (client.id == id) {
+                        printf("COMMANDE DE %s AQUITÉE\n", client.pseudo);
+//                        place = i;
+//                        carnet.commandes[place] = carnet.commandes[carnet.nbCommandes - 1];
+//                        carnet.nbCommandes--;
+                        write(client.sd, "203:", 4);
+                        break;
+                    }
+                }
                 break;
             }
 
             default:
                 write(sd, NOK, strlen(NOK) + 1);
-                printf("NOK : message recu %s\n", buffer);
+                printf("NOK : message recu %s\n", buf);
                 break;
         }
     } while (atoi(requete) != DMD_DECONNEXION);
+
     close(sd);
     free(thread_args);
     return NULL;
@@ -161,6 +191,7 @@ int main() {
     socklen_t cltLen;
     signal(SIGUSR1, printstate);
     pthread_mutex_init(&mutex, NULL);
+    sem_init(&semCommande, 0, 1);
     // Création de la socket de réception d’écoute des appels
     CHECK(se = socket(PF_INET, SOCK_STREAM, 0), "Can't create");
     int optval = 1;

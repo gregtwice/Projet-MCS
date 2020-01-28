@@ -14,6 +14,7 @@ typedef struct client {
     unsigned long id;
     char pseudo[20];
     time_t heureConnexion;
+    int sd;
 } client_t;
 
 typedef struct annuaire {
@@ -37,7 +38,7 @@ typedef struct {
 annuaire_t annuaire_clients;
 serveurList_t liste_serveurs;
 
-client_t creer_client(unsigned long id, char *pseudo, time_t heure_conn);
+client_t creer_client(unsigned long id, char *pseudo, time_t heure_conn, int sd);
 
 client_t find_client(unsigned long);
 
