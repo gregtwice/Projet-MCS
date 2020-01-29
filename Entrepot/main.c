@@ -17,6 +17,7 @@ char cdProduit[MAX_BUFF];
 char qte[MAX_BUFF];
 
 void writeCatalogue();
+
 /**
  * \struct produit_t
  * \brief descriptif d'un produit contenu dans l'entrepot
@@ -81,9 +82,10 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                             sprintf(response, "%s%s", prot, split[1]);
                             write(sd, response, strlen(response));
                         } else {
-                            char response[10];
-                            printf("QUANTITÉ OK !!!!");
+                            char response[30];
+                            printf("QUANTITÉ PAS OK !!!!");
                             protocol_as_char(PROD_DISPO_NON_QTE, response);
+                            sprintf(response, "%s%s", response, split[1]);
                             write(sd, response, strlen(response));
                         }
                     }
@@ -111,7 +113,7 @@ void dialogueSvc(int sd, struct sockaddr_in svc) {
                 for (int i = 0; i < catalogue.nprods; ++i) {
                     if (catalogue.produits[i].nProd == prod) {
                         catalogue.produits[i].qte -= quantite;
-//                        writeCatalogue();
+                        writeCatalogue();
                         for (int j = 0; j < catalogue.nprods; ++j) {
                             produit_t x = catalogue.produits[j];
                             printf("numprd :%d nomprod : %s quantité : %d\n", x.nProd, x.nom, x.qte);

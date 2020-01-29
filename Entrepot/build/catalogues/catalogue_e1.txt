@@ -1,6 +1,6 @@
 1:Meuble:2
-2:Livre:200
-3:Table:2
+2:Livre:194
+3:Table:0
 4:TV:0
 5:Chaise:1
 6:Planche:15

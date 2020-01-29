@@ -13,12 +13,14 @@
 
 
 enum Etat connexion_serveur_master();
+
 /**
  * @fn afficherMenu(enum Etat e)
  * @param e l'etat du client
  * @return le choix de l'utilisateur
  */
 int afficherMenu(enum Etat e);
+
 /**
  * \fn enum Etat connexion_serveur_master(int sock)
  * \param sock
@@ -28,8 +30,8 @@ enum Etat connexion_serveur_master(int sock) {
     enum Etat e;
     printf("Entrez votre pseudonyme (max 20 caractères):\n");
     char pseudo[20];
-//    fgets(pseudo, 20, stdin);
-    strcpy(pseudo, "Grégoire\n");
+    fgets(pseudo, 20, stdin);
+//    strcpy(pseudo, "Grégoire\n");
     sendReq(CONN_CLIENT_MASTER, sock, pseudo);
     read(sock, buffer, sizeof(buffer));
     if (strcmp(buffer, "OK") == 0) {
@@ -48,11 +50,13 @@ int sock;
  * @brief Permet de quitter le serveur
  */
 void quit();
+
 /**
  * void commander_produit(int sock)
  * @param sock
  */
 void commander_produit(int sock);
+
 /**
  * \fn void handler()
  * \brief permet de ce deconnecter
@@ -161,7 +165,13 @@ void commander_produit(int sock) {
         printf("le message total :%s\n", prot);
         write(sock, prot, strlen(prot) + 1);
         read(sock, buffer, sizeof(buffer));
-        printf("\n\nRéponse %s !!!!!\n\n",buffer);
+        char *code = strtok(buffer, ":");
+        if (strcmp(code, "203") == 0) {
+            printf("\n\nCommande éffectuée\n");
+        } else if (strcmp(code, "403") == 0) {
+            printf("\n\nErreur produit non disponible dans la quantité demandée \n");
+        }
+
     } else {
         fprintf(stderr, "\tErreur de saisie\n\n\n");
     }
@@ -189,7 +199,7 @@ int afficherMenu(enum Etat e) {
             break;
     }
     printf("Votre choix ?");
-    int choix =0;
+    int choix = 0;
     scanf("%d", &choix); //NOLINT
     getchar();
     return choix;

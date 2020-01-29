@@ -159,6 +159,26 @@ void *dialogue(void *args) {
             }
 
             case PROD_DISPO_NON_QTE: {
+                sem_wait(&semCommande);
+                printf("Reste :%s\n", reste);
+                char *ptr;
+                for (int i = 0; i < carnet.nbCommandes; ++i) {
+                    commande_t curCommmande = carnet.commandes[i];
+                    if (curCommmande.client.id == strtoul(reste, &ptr, 10)) {
+                        if (curCommmande.ack == 0) {
+                            char prot[4];
+                            printf("Commande pour %s\n", curCommmande.client.pseudo);
+                            protocol_as_char(ERR_QTE, prot);
+                            char request[100];
+                            sprintf(request, "%s%d:%d:%lu", prot, curCommmande.numprod, curCommmande.qte,
+                                    curCommmande.client.id);
+                            printf("Requete vers client %s\n", request);
+                            printf("longueur req :%lu\n", strlen(request));
+                            write(curCommmande.client.sd, request, strlen(request));
+                        }
+                    }
+                }
+                sem_post(&semCommande);
                 break;
             }
 
@@ -170,9 +190,9 @@ void *dialogue(void *args) {
                     client_t client = carnet.commandes[i].client;
                     if (client.id == id) {
                         printf("COMMANDE DE %s AQUITÉE\n", client.pseudo);
-//                        place = i;
-//                        carnet.commandes[place] = carnet.commandes[carnet.nbCommandes - 1];
-//                        carnet.nbCommandes--;
+                        place = i;
+                        carnet.commandes[place] = carnet.commandes[carnet.nbCommandes - 1];
+                        carnet.nbCommandes--;
                         write(client.sd, "203:", 4);
                         break;
                     }
